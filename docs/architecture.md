@@ -48,14 +48,20 @@ Detects whether the input is YAML vs JSON (is it `{`-prefixed), converts YAML→
 2. **Default values** — `defaults.NeatDefaults` removes fields equal to the Kubernetes object
    model's defaults.
 3. **Scheduler** — remove `spec.nodeName`.
-4. **Pod** — `neatServiceAccount`: remove `default-token-*` volumes and volumeMounts and the
+4. **Tolerations** — `neatTolerations` removes system-injected tolerations
+   (`DefaultTolerationSeconds`: `not-ready`/`unreachable` NoExecute + 300s; `TaintNodesByCondition`:
+   memory/disk/pid pressure, unschedulable, network-unavailable) from `spec.tolerations` and
+   `spec.template.spec.tolerations`.
+5. **RuntimeClass** — `neatRuntimeClass` removes the admission-computed `spec.overhead` and
+   `spec.template.spec.overhead`.
+6. **Pod** — `neatServiceAccount`: remove `default-token-*` volumes and volumeMounts and the
    deprecated `spec.serviceAccount`.
    **Other workloads** — `neatWorkloadTemplate`: remove
    `spec.template.metadata.creationTimestamp`.
-5. **Metadata** — drop `kubectl.kubernetes.io/last-applied-configuration`, keep only
+7. **Metadata** — drop `kubectl.kubernetes.io/last-applied-configuration`, keep only
    `name`, `namespace`, `labels`, `annotations`.
-6. **Status** — remove the whole `status` block.
-7. **Empties** — recursively delete empty arrays/objects, re-checking parents so no empty
+8. **Status** — remove the whole `status` block.
+9. **Empties** — recursively delete empty arrays/objects, re-checking parents so no empty
    shells remain.
 
 ## Default-value removal (`pkg/defaults/`)

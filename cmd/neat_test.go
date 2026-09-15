@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"strings"
@@ -373,6 +374,287 @@ func TestNeatWorkloadTemplate(t *testing.T) {
 			t.Errorf("test case '%s' failed. want: '%s' have: '%s'", c.title, c.expect, resJSON)
 		}
 	}
+}
+
+func TestNeatRuntimeClass(t *testing.T) {
+	cases := []struct {
+		title  string
+		data   string
+		expect string
+	}{
+		{
+			title: "pod with overhead",
+			data: `{
+				"apiVersion": "v1",
+				"kind": "Pod",
+				"metadata": {
+					"name": "myapp",
+					"namespace": "default"
+				},
+				"spec": {
+					"containers": [{"name": "myapp", "image": "nginx"}],
+					"overhead": {"cpu": "100m", "memory": "128Mi"}
+				}
+			}`,
+			expect: `{
+				"apiVersion": "v1",
+				"kind": "Pod",
+				"metadata": {
+					"name": "myapp",
+					"namespace": "default"
+				},
+				"spec": {
+					"containers": [{"name": "myapp", "image": "nginx"}]
+				}
+			}`,
+		},
+		{
+			title: "workload template with overhead",
+			data: `{
+				"apiVersion": "apps/v1",
+				"kind": "Deployment",
+				"metadata": {"name": "myapp", "namespace": "default"},
+				"spec": {
+					"template": {
+						"metadata": {"labels": {"app": "myapp"}},
+						"spec": {
+							"containers": [{"name": "myapp", "image": "nginx"}],
+							"overhead": {"cpu": "50m"}
+						}
+					}
+				}
+			}`,
+			expect: `{
+				"apiVersion": "apps/v1",
+				"kind": "Deployment",
+				"metadata": {"name": "myapp", "namespace": "default"},
+				"spec": {
+					"template": {
+						"metadata": {"labels": {"app": "myapp"}},
+						"spec": {
+							"containers": [{"name": "myapp", "image": "nginx"}]
+						}
+					}
+				}
+			}`,
+		},
+		{
+			title:  "no overhead",
+			data:   `{"apiVersion":"v1","kind":"Pod","metadata":{"name":"x"},"spec":{"containers":[]}}`,
+			expect: `{"apiVersion":"v1","kind":"Pod","metadata":{"name":"x"},"spec":{"containers":[]}}`,
+		},
+	}
+	for _, c := range cases {
+		resJSON, err := neatRuntimeClass(c.data)
+		if err != nil {
+			t.Errorf("error in neatRuntimeClass for case '%s': %v", c.title, err)
+			continue
+		}
+		equal, err := testutil.JSONEqual(resJSON, c.expect)
+		if err != nil {
+			t.Errorf("error in JSONEqual for case '%s': %v", c.title, err)
+			continue
+		}
+		if !equal {
+			t.Errorf("test case '%s' failed. want: '%s' have: '%s'", c.title, c.expect, resJSON)
+		}
+	}
+}
+
+func TestNeatTolerations(t *testing.T) {
+	cases := []struct {
+		title  string
+		data   string
+		expect string
+	}{
+		{
+			title: "pod with default tolerations",
+			data: `{
+				"apiVersion": "v1",
+				"kind": "Pod",
+				"metadata": {"name": "myapp", "namespace": "default"},
+				"spec": {
+					"containers": [{"name": "myapp", "image": "nginx"}],
+					"tolerations": [
+						{
+							"effect": "NoExecute",
+							"key": "node.kubernetes.io/not-ready",
+							"operator": "Exists",
+							"tolerationSeconds": 300
+						},
+						{
+							"effect": "NoExecute",
+							"key": "node.kubernetes.io/unreachable",
+							"operator": "Exists",
+							"tolerationSeconds": 300
+						}
+					]
+				}
+			}`,
+			expect: `{
+				"apiVersion": "v1",
+				"kind": "Pod",
+				"metadata": {"name": "myapp", "namespace": "default"},
+				"spec": {
+					"containers": [{"name": "myapp", "image": "nginx"}]
+				}
+			}`,
+		},
+		{
+			title: "pod with user toleration kept",
+			data: `{
+				"apiVersion": "v1",
+				"kind": "Pod",
+				"metadata": {"name": "myapp"},
+				"spec": {
+					"containers": [],
+					"tolerations": [
+						{
+							"effect": "NoExecute",
+							"key": "node.kubernetes.io/not-ready",
+							"operator": "Exists",
+							"tolerationSeconds": 300
+						},
+						{
+							"effect": "NoExecute",
+							"key": "my-app/special",
+							"operator": "Exists",
+							"tolerationSeconds": 600
+						}
+					]
+				}
+			}`,
+			expect: `{
+				"apiVersion": "v1",
+				"kind": "Pod",
+				"metadata": {"name": "myapp"},
+				"spec": {
+					"containers": [],
+					"tolerations": [
+						{
+							"effect": "NoExecute",
+							"key": "my-app/special",
+							"operator": "Exists",
+							"tolerationSeconds": 600
+						}
+					]
+				}
+			}`,
+		},
+		{
+			title: "workload template tolerations",
+			data: `{
+				"apiVersion": "apps/v1",
+				"kind": "Deployment",
+				"metadata": {"name": "myapp", "namespace": "default"},
+				"spec": {
+					"template": {
+						"metadata": {"labels": {"app": "myapp"}},
+						"spec": {
+							"containers": [{"name": "myapp", "image": "nginx"}],
+							"tolerations": [
+								{
+									"effect": "NoExecute",
+									"key": "node.kubernetes.io/not-ready",
+									"operator": "Exists",
+									"tolerationSeconds": 300
+								},
+								{
+									"effect": "NoSchedule",
+									"key": "node.kubernetes.io/disk-pressure",
+									"operator": "Exists"
+								},
+								{
+									"effect": "NoSchedule",
+									"key": "node.kubernetes.io/unschedulable",
+									"operator": "Exists"
+								}
+							]
+						}
+					}
+				}
+			}`,
+			expect: `{
+				"apiVersion": "apps/v1",
+				"kind": "Deployment",
+				"metadata": {"name": "myapp", "namespace": "default"},
+				"spec": {
+					"template": {
+						"metadata": {"labels": {"app": "myapp"}},
+						"spec": {
+							"containers": [{"name": "myapp", "image": "nginx"}]
+						}
+					}
+				}
+			}`,
+		},
+		{
+			title: "custom tolerationSeconds preserved",
+			data: `{
+				"apiVersion": "v1",
+				"kind": "Pod",
+				"metadata": {"name": "myapp"},
+				"spec": {
+					"containers": [],
+					"tolerations": [
+						{
+							"effect": "NoExecute",
+							"key": "node.kubernetes.io/not-ready",
+							"operator": "Exists",
+							"tolerationSeconds": 60
+						}
+					]
+				}
+			}`,
+			expect: `{
+				"apiVersion": "v1",
+				"kind": "Pod",
+				"metadata": {"name": "myapp"},
+				"spec": {
+					"containers": [],
+					"tolerations": [
+						{
+							"effect": "NoExecute",
+							"key": "node.kubernetes.io/not-ready",
+							"operator": "Exists",
+							"tolerationSeconds": 60
+						}
+					]
+				}
+			}`,
+		},
+	}
+	for _, c := range cases {
+		resJSON, err := neatTolerations(c.data)
+		if err != nil {
+			t.Errorf("error in neatTolerations for case '%s': %v", c.title, err)
+			continue
+		}
+		equal, err := testutil.JSONEqual(resJSON, c.expect)
+		if err != nil {
+			t.Errorf("error in JSONEqual for case '%s': %v", c.title, err)
+			continue
+		}
+		if !equal {
+			t.Errorf("test case '%s' failed. want: '%s' have: '%s'", c.title, c.expect, resJSON)
+		}
+	}
+}
+
+func TestVersionFlag(t *testing.T) {
+	rootCmd.SetArgs([]string{"--version"})
+	rootCmd.ParseFlags([]string{"--version"})
+	cmdout := new(bytes.Buffer)
+	rootCmd.SetOut(cmdout)
+	rootCmd.SetErr(new(bytes.Buffer))
+	err := rootCmd.RunE(rootCmd, []string{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(cmdout.String(), "kubectl-neat version") {
+		t.Errorf("expected version output, got: %s", cmdout.String())
+	}
+	printVersion = false
 }
 
 func TestNeatEmpty(t *testing.T) {

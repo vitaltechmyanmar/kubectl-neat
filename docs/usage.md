@@ -19,6 +19,7 @@ kubectl-neat version        Print the installed version
 | --- | --- | --- |
 | `-f`, `--file <path>` | `-` (stdin) | Path to the YAML/JSON file to neat. Use `-` for stdin. |
 | `-o`, `--output <fmt>` | auto | Output format: `yaml` or `json`. Auto-detected from the input if omitted. |
+| `-v`, `--version` | `false` | Print the `kubectl-neat` version and exit. |
 
 Flags may appear around the `get` subcommand. See [Output format](#output-format) below.
 
@@ -64,15 +65,6 @@ kubectl neat get -- all -A
 > Note: `kubectl neat get` outputs **JSON by default**. Add `-o yaml` (a neat flag) to get
 > YAML, e.g. `kubectl neat get -o yaml -- pod mypod`.
 
-## Subcommand: version
-
-```bash
-kubectl neat version
-```
-
-Prints the installed version. On locally built binaries (without goreleaser ldflags) this
-shows `v0.0.0+unknown`.
-
 ## Output format
 
 | Command | Default output |
@@ -82,6 +74,17 @@ shows `v0.0.0+unknown`.
 | `kubectl neat -o yaml` | `yaml` |
 | `kubectl neat -o json` | `json` |
 
+## Version
+
+```bash
+kubectl neat version
+kubectl neat --version
+kubectl neat -v
+```
+
+All three print the installed version. On locally built binaries (without goreleaser
+ldflags) this shows `v0.0.0+unknown`.
+
 ## What gets removed
 
 The exact list of fields that are neat-ed out is documented in
@@ -90,6 +93,10 @@ The exact list of fields that are neat-ed out is documented in
 - `status` and other runtime information
 - scheduler-assigned `spec.nodeName`
 - Pod service-account token volumes (`default-token-*`) and deprecated `spec.serviceAccount`
+- system-added tolerations: the `DefaultTolerationSeconds` entries (`node.kubernetes.io/not-ready`,
+  `node.kubernetes.io/unreachable`, 300s) and node-condition tolerations
+  (memory/disk/pid pressure, unschedulable, network-unavailable)
+- RuntimeClass-computed pod overhead (`spec.overhead`)
 - `creationTimestamp` in workload pod templates (`spec.template.metadata`)
 - the `kubectl.kubernetes.io/last-applied-configuration` annotation
 - default values for the `v1` (core), `apps/v1`, and `batch/v1` API groups

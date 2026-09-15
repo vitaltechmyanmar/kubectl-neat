@@ -71,6 +71,14 @@ func Neat(in string) (string, error) {
 	if err != nil {
 		return draft, fmt.Errorf("error in neatScheduler : %v", err)
 	}
+	draft, err = neatTolerations(draft)
+	if err != nil {
+		return draft, fmt.Errorf("error in neatTolerations : %v", err)
+	}
+	draft, err = neatRuntimeClass(draft)
+	if err != nil {
+		return draft, fmt.Errorf("error in neatRuntimeClass : %v", err)
+	}
 	if kind == "Pod" {
 		draft, err = neatServiceAccount(draft)
 		if err != nil {
@@ -127,6 +135,102 @@ func neatWorkloadTemplate(in string) (string, error) {
 
 func neatScheduler(in string) (string, error) {
 	return sjson.Delete(in, "spec.nodeName")
+}
+
+// keys of tolerations added by the DefaultTolerationSeconds admission controller
+var defaultTolerationKeys = map[string]bool{
+	"node.kubernetes.io/not-ready":   true,
+	"node.kubernetes.io/unreachable": true,
+}
+
+// keys of tolerations for taints added by the TaintNodesByCondition controller
+var conditionTolerationKeys = map[string]bool{
+	"node.kubernetes.io/memory-pressure":     true,
+	"node.kubernetes.io/disk-pressure":       true,
+	"node.kubernetes.io/pid-pressure":        true,
+	"node.kubernetes.io/unschedulable":       true,
+	"node.kubernetes.io/network-unavailable": true,
+}
+
+// neatTolerations removes system-added tolerations from the pod spec and from
+// pod templates of workload resources (Deployment, StatefulSet, DaemonSet, etc.).
+func neatTolerations(in string) (string, error) {
+	var err error
+	in, err = removeSystemTolerations(in, "spec.tolerations")
+	if err != nil {
+		return in, fmt.Errorf("error deleting system tolerations in spec : %v", err)
+	}
+	in, err = removeSystemTolerations(in, "spec.template.spec.tolerations")
+	if err != nil {
+		return in, fmt.Errorf("error deleting system tolerations in workload template : %v", err)
+	}
+	return in, nil
+}
+
+// removeSystemTolerations deletes, from the tolerations array at 'path', the
+// entries that Kubernetes injects by default (see isSystemToleration).
+// It iterates backwards so deleting an entry never shifts an unvisited index,
+// and drops the whole key if nothing is left.
+func removeSystemTolerations(in, path string) (string, error) {
+	if !gjson.Get(in, path).Exists() {
+		return in, nil
+	}
+	tolerations := gjson.Get(in, path).Array()
+	for i := len(tolerations) - 1; i >= 0; i-- {
+		if !isSystemToleration(tolerations[i]) {
+			continue
+		}
+		var err error
+		in, err = sjson.Delete(in, fmt.Sprintf("%s.%d", path, i))
+		if err != nil {
+			return in, fmt.Errorf("error deleting toleration %s.%d : %v", path, i, err)
+		}
+	}
+	if len(gjson.Get(in, path).Array()) == 0 {
+		var err error
+		in, err = sjson.Delete(in, path)
+		if err != nil {
+			return in, fmt.Errorf("error deleting empty tolerations in %s : %v", path, err)
+		}
+	}
+	return in, nil
+}
+
+// isSystemToleration reports whether a toleration entry was injected by Kubernetes:
+//   - DefaultTolerationSeconds adds not-ready/unreachable tolerations with a 300s
+//     window (NoExecute) so pods keep running on temporarily lost nodes.
+//   - TaintNodesByCondition adds tolerations for node condition taints
+//     (memory/disk/pid pressure, unschedulable, network unavailable).
+func isSystemToleration(t gjson.Result) bool {
+	key := t.Get("key").String()
+	operator := t.Get("operator").String()
+	if operator == "" {
+		operator = "Equal"
+	}
+	effect := t.Get("effect").String()
+	switch {
+	case defaultTolerationKeys[key] && operator == "Exists" && effect == "NoExecute":
+		return t.Get("tolerationSeconds").Int() == 300
+	case conditionTolerationKeys[key] && operator == "Exists" && effect == "NoSchedule":
+		return true
+	}
+	return false
+}
+
+// neatRuntimeClass removes the pod overhead that the RuntimeClass admission
+// controller computes and injects into the pod spec, for Pods and workload
+// pod templates.
+func neatRuntimeClass(in string) (string, error) {
+	var err error
+	in, err = sjson.Delete(in, "spec.overhead")
+	if err != nil {
+		return in, fmt.Errorf("error deleting spec.overhead : %v", err)
+	}
+	in, err = sjson.Delete(in, "spec.template.spec.overhead")
+	if err != nil {
+		return in, fmt.Errorf("error deleting spec.template.spec.overhead : %v", err)
+	}
+	return in, nil
 }
 
 func neatServiceAccount(in string) (string, error) {

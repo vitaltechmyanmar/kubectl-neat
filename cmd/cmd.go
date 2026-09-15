@@ -29,10 +29,12 @@ import (
 
 var outputFormat *string
 var inputFile *string
+var printVersion bool
 
 func init() {
 	outputFormat = rootCmd.PersistentFlags().StringP("output", "o", "yaml", "output format: yaml or json")
 	inputFile = rootCmd.Flags().StringP("file", "f", "-", "file path to neat, or - to read from stdin")
+	rootCmd.Flags().BoolVarP(&printVersion, "version", "v", false, "print kubectl-neat version and exit")
 	rootCmd.SetOut(os.Stdout)
 	rootCmd.SetErr(os.Stderr)
 	rootCmd.MarkFlagFilename("file")
@@ -55,6 +57,10 @@ kubectl neat -f - <./my-pod.json
 kubectl neat -f ./my-pod.json
 kubectl neat -f ./my-pod.json --output yaml`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if printVersion {
+			cmd.Printf("kubectl-neat version: %s\n", Version)
+			return nil
+		}
 		var in, out []byte
 		var err error
 		if *inputFile == "-" {
