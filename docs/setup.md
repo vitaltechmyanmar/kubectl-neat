@@ -11,29 +11,37 @@ This guide covers requirements and the supported ways of installing `kubectl-nea
 | Go 1.26+ | building from source | `go` in `go.mod` is `1.26.0` |
 | `make` (optional) | convenience build targets | the Makefile wraps `go` commands |
 
-## Install from the krew index
+## Install with krew
 
-If (and once) this fork is published to the official krew index:
+[krew](https://krew.sigs.k8s.io/) is a kubectl plugin manager. Install it first:
 
 ```bash
-kubectl krew index add default
+kubectl krew update
+```
+
+### From the official krew index (upstream)
+
+The official krew index also ships a `neat` plugin, but it points at the **upstream**
+`itaysk/kubectl-neat` release:
+
+```bash
 kubectl krew install neat
 ```
 
-## Install from a release manifest (this repository)
+### This fork from a local manifest
 
-The `make release` flow produces a krew manifest at `dist/kubectl-neat.yaml`. Install it directly:
-
-```bash
-kubectl krew index add vitaltech https://github.com/vitaltechmyanmar/kubectl-neat.git
-kubectl krew install vitaltech/neat
-```
-
-Or install a locally generated manifest:
+Because this fork's `neat` is not in the official krew index, build the release assets and
+install its manifest directly:
 
 ```bash
-kubectl krew install --manifest=dist/kubectl-neat.yaml --archive=dist/kubectl-neat_linux_amd64.tar.gz
+make release                       # produces dist/kubectl-neat.yaml + archives + checksums
+kubectl krew install --manifest=dist/kubectl-neat.yaml \
+                     --archive=dist/kubectl-neat_linux_amd64.tar.gz
 ```
+
+> `make release` requires `goreleaser`, `yq`, and `jq`. Alternatively, run the per-platform
+> helper directly against a published release:
+> `./krew-package.sh <os> <arch> neat ./dist
 
 ## Download a standalone binary
 
