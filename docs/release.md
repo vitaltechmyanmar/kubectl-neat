@@ -40,18 +40,23 @@ The platform `uri` entries also point at the release download URL:
 https://github.com/vitaltechmyanmar/kubectl-neat/releases/download/v3.0.0/kubectl-neat_linux_amd64.tar.gz
 ```
 
-### 2. (Optional) Update supported versions
+### 2. Update the changelog
+
+Add a section to `CHANGELOG.md` describing the new version's changes (features, fixes,
+docs). Keep sections in date order, newest first.
+
+### 3. (Optional) Update supported versions
 
 Keep `SECURITY.md`'s supported-versions table in sync with what you'll support.
 
-### 3. Commit
+### 4. Commit
 
 ```bash
-git add krew-template.yaml SECURITY.md
-git commit -m "release: prepare v3.0.0"
+git add CHANGELOG.md krew-template.yaml SECURITY.md
+git commit -m "release: prepare v3.0.1"
 ```
 
-### 4. Create and push the tag
+### 5. Create and push the tag
 
 ```bash
 git tag -a v3.0.0 -m "kubectl-neat v3.0.0"
@@ -99,6 +104,7 @@ make goreleaser            # snapshot build in ./dist, nothing published
 
 ## Checklist
 
+- [ ] `CHANGELOG.md` section added for the new version
 - [ ] `krew-template.yaml` version and `uri`s updated
 - [ ] `SECURITY.md` supported versions up to date
 - [ ] `cmd.Version` will be injected (check the goreleaser ldflag path)
@@ -106,3 +112,5 @@ make goreleaser            # snapshot build in ./dist, nothing published
 - [ ] tag created and pushed: `git push origin vMYVERSION`
 - [ ] GitHub Release published with archives + `checksums.txt`
 - [ ] krew manifest regenerated (`make release`) and submitted/updated in the krew index
+- [ ] GitHub Release description summarizes the changes (GoReleaser changelog excludes
+      `docs:`/`test:` commits)
