@@ -13,35 +13,17 @@ This guide covers requirements and the supported ways of installing `kubectl-nea
 
 ## Install with krew
 
-[krew](https://krew.sigs.k8s.io/) is a kubectl plugin manager. Install it first:
+[krew](https://krew.sigs.k8s.io/) is a kubectl plugin manager. To install `kubectl-neat`
+as a kubectl plugin, build the release assets and install the manifest directly:
 
 ```bash
-kubectl krew update
-```
-
-### From the official krew index (upstream)
-
-The official krew index also ships a `neat` plugin, but it points at the **upstream**
-`itaysk/kubectl-neat` release:
-
-```bash
-kubectl krew install neat
-```
-
-### This fork from a local manifest
-
-Because this fork's `neat` is not in the official krew index, build the release assets and
-install its manifest directly:
-
-```bash
-make release                       # produces dist/kubectl-neat.yaml + archives + checksums
+make release                        # produces dist/kubectl-neat.yaml + archives + checksums
 kubectl krew install --manifest=dist/kubectl-neat.yaml \
                      --archive=dist/kubectl-neat_linux_amd64.tar.gz
 ```
 
-> `make release` requires `goreleaser`, `yq`, and `jq`. Alternatively, run the per-platform
-> helper directly against a published release:
-> `./krew-package.sh <os> <arch> neat ./dist
+> `make release` requires `goreleaser`, `yq`, and `jq`. Alternatively, download the archive
+> and manifest from a published release and run `kubectl krew install` with local paths.
 
 ## Download a standalone binary
 

@@ -34,12 +34,16 @@ considered redundant and will be removed from the output by kubectl-neat.
 
 ## Installation
 
-```bash
-kubectl krew install neat
-```
-
-Or download the binary for your platform from the
+Download the binary for your platform from the
 [releases page](https://github.com/vitaltechmyanmar/kubectl-neat/releases).
+
+Or install as a kubectl plugin from a locally built manifest:
+
+```bash
+make release
+kubectl krew install --manifest=dist/kubectl-neat.yaml \
+                     --archive=dist/kubectl-neat_linux_amd64.tar.gz
+```
 
 Installed as a kubectl plugin, the command is `kubectl neat`; as a standalone executable it is
 `kubectl-neat`. All install options are covered in the [setup guide](docs/setup.md).

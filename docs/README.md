@@ -21,8 +21,10 @@ This index covers everything you need to work with **kubectl-neat**.
 ## Cheatsheet
 
 ```bash
-# Install as a kubectl plugin
-kubectl krew install neat
+# Install as a kubectl plugin (from a local build)
+make release
+kubectl krew install --manifest=dist/kubectl-neat.yaml \
+                     --archive=dist/kubectl-neat_linux_amd64.tar.gz
 
 # Neat a resource (stdin, file, or kubectl pipeline)
 kubectl get pod mypod -o yaml | kubectl neat
