@@ -77,6 +77,7 @@ See the [usage guide](docs/usage.md) for the full command reference.
 | Testing | [docs/testing.md](docs/testing.md) |
 | Release & tagging | [docs/release.md](docs/release.md) |
 | Architecture | [docs/architecture.md](docs/architecture.md) |
+| Changelog | [CHANGELOG.md](CHANGELOG.md) |
 
 ## How it works
 
