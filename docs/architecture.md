@@ -78,6 +78,28 @@ Detects whether the input is YAML vs JSON (is it `{`-prefixed), converts YAML→
 Because defaulting only applies to registered kinds, resources from other groups (e.g. CRDs)
 pass through unchanged.
 
+## Common mutating controllers
+
+Here are the [recommended](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#what-does-each-admission-controller-do)
+admission controllers, and their relation to kubectl-neat:
+
+| controller | description | neat |
+| --- | --- | --- |
+| NamespaceLifecycle | rejects operations on resources in namespaces being deleted | ignore |
+| LimitRanger | set default values for resource requests and limits | ignore |
+| ServiceAccount | set default service account and assign token | Remove `default-token-*` volumes. Remove deprecated `spec.serviceAccount` |
+| TaintNodesByCondition | automatically taint a node based on node conditions | Remove node-condition tolerations |
+| Priority | validate priority class and add it's value | ignore |
+| DefaultTolerationSeconds | configure pods to temporarily tolerate not-ready and unreachable taints | Remove default `not-ready`/`unreachable` tolerations |
+| DefaultStorageClass | validate and set default storage class for new pvc | ignore |
+| StorageObjectInUseProtection | prevent deletion of pvc/pv in use by adding a finalizer | ignore |
+| PersistentVolumeClaimResize | enforce pvc resizing only for enabled storage classes | ignore |
+| MutatingAdmissionWebhook | implement the mutating webhook feature | ignore |
+| ValidatingAdmissionWebhook | implement the validating webhook feature | ignore |
+| RuntimeClass | add pod overhead according to runtime class | Remove `spec.overhead` |
+| ResourceQuota | implement the resource quota feature | ignore |
+| Kubernetes Scheduler | assign pods to nodes | Remove `spec.nodeName` |
+
 ## Test fixtures
 
 `test/fixtures/` contains `*-raw.*` inputs and `*-neat.json` expected outputs used by unit and

@@ -1,12 +1,21 @@
 # kubectl-neat
 
+[![CI](https://github.com/vitaltechmyanmar/kubectl-neat/actions/workflows/ci.yml/badge.svg)](https://github.com/vitaltechmyanmar/kubectl-neat/actions/workflows/ci.yml)
+[![Release](https://github.com/vitaltechmyanmar/kubectl-neat/actions/workflows/release.yml/badge.svg)](https://github.com/vitaltechmyanmar/kubectl-neat/actions/workflows/release.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/vitaltechmyanmar/kubectl-neat)](https://goreportcard.com/report/github.com/vitaltechmyanmar/kubectl-neat)
+
 > **Maintained fork** of [itaysk/kubectl-neat](https://github.com/itaysk/kubectl-neat).
 
 Remove clutter from Kubernetes manifests to make them more readable.
 
+When Kubernetes stores a resource you created, it injects a lot of information you never
+authored — default values, internal metadata, admission-controller and scheduler leftovers.
+`kubectl get` output becomes unreadably verbose. `kubectl-neat` cleans it up.
+
 ## Demo
 
-Here is a result of a `kubectl get pod -o yaml` for a simple Pod. The lines marked in red are considered redundant and will be removed from the output by kubectl-neat.
+Here is a result of a `kubectl get pod -o yaml` for a simple Pod. The lines marked in red are
+considered redundant and will be removed from the output by kubectl-neat.
 
 ![demo](./demo.png)
 
@@ -14,25 +23,14 @@ Here is a result of a `kubectl get pod -o yaml` for a simple Pod. The lines mark
 
 ![test results](./images/test-results.png)
 
-## Documentation
+## Features
 
-- [Setup](./docs/setup.md) — requirements and installation
-- [Usage](./docs/usage.md) — full command reference and examples
-- [Testing](./docs/testing.md) — how to run the test suites
-- [Release](./docs/release.md) — tagging and publishing releases
-- [Architecture](./docs/architecture.md) — how kubectl-neat works
-
-## Why
-
-When you create a Kubernetes resource, let's say a Pod, Kubernetes adds a whole bunch of internal system information to the yaml or json that you originally authored. This includes:
-
-- Metadata such as creation timestamp, or some internal IDs
-- Fill in for missing attributes with default values
-- Additional system attributes created by admission controllers, such as service account token
-- Status information
-
-If you try to `kubectl get` resources you have created, they will no longer look like what you originally authored, and will be unreadably verbose.   
-`kubectl-neat` cleans up that redundant information for you.
+- Removes `status`, scheduler-assigned `spec.nodeName`, and stale internal metadata
+- Removes default values for the `v1` (core), `apps/v1`, and `batch/v1` API groups using
+  Kubernetes' own object-model defaulting
+- Cleans up admission-controller leftovers: service-account token volumes, system tolerations,
+  and RuntimeClass-computed pod overhead
+- Handles YAML and JSON, single resources and Kubernetes `List`s
 
 ## Installation
 
@@ -40,90 +38,71 @@ If you try to `kubectl get` resources you have created, they will no longer look
 kubectl krew install neat
 ```
 
-or just download the binary if you prefer.
+Or download the binary for your platform from the
+[releases page](https://github.com/vitaltechmyanmar/kubectl-neat/releases).
 
-When used as a kubectl plugin the command is `kubectl neat`, and when used as a standalone executable it's `kubectl-neat`.
+Installed as a kubectl plugin, the command is `kubectl neat`; as a standalone executable it is
+`kubectl-neat`. All install options are covered in the [setup guide](docs/setup.md).
 
-Verify the installation with `kubectl neat version`.
-
-## Usage
-
-There are two modes of operation that specify where to get the input document from: a local file or from  Kubernetes.
-
-### Local - file or Stdin
-
-This is the default mode if you run just `kubectl neat`. This command accepts an optional flag `-f/--file` which specifies the file to neat. It can be a path to a local file, or `-` to read the file from stdin. If omitted, it will default to `-`. The file must be a yaml or json file and a valid Kubernetes resource.
-
-There's another optional flag, `-o/--output`, which specifies the format for the output (`yaml` or `json`). If omitted it will default to the same format of the input (auto-detected).
-
-Examples:
-```bash
-kubectl get pod mypod -o yaml | kubectl neat
-
-kubectl get pod mypod -oyaml | kubectl neat -o json
-
-kubectl neat -f - <./my-pod.json
-
-kubectl neat -f ./my-pod.json
-
-kubectl neat -f ./my-pod.json --output yaml
-```
-
-### Kubernetes - kubectl get wrapper
-
-This mode is invoked by calling the `get` subcommand, i.e `kubectl neat get ...`. It is a convenience to run `kubectl get` and then neat the output in a single command. It accepts any argument that `kubectl get` accepts and passes those arguments as is to `kubectl get` (internally it always requests JSON from `kubectl get` and converts back as needed). Since it executes `kubectl`, it needs `kubectl` to be available in the PATH. Unless you specify `-o/--output`, the output defaults to JSON.
-
-Examples:
-```bash
-kubectl neat get -- pod mypod -oyaml
-kubectl neat get -- svc -n default myservice --output json
-```
-
-### Version
+Verify the installation:
 
 ```bash
 kubectl neat version
 ```
 
-Prints the installed `kubectl-neat` version.
+## Quick start
 
-# How it works
+```bash
+# pipe a kubectl result
+kubectl get pod mypod -o yaml | kubectl neat
 
-Besides general tidying, kubectl-neat always removes:
+# read from a file or stdin
+kubectl neat -f ./my-pod.yaml
+kubectl neat -f - < ./my-pod.json
+
+# run kubectl get and neat in a single command (default output is JSON)
+kubectl neat get -- pod mypod -o yaml
+kubectl neat get -- svc -n default myservice --output json
+```
+
+The output format defaults to the input format (`yaml`/`json`); override it with `-o yaml|json`.
+See the [usage guide](docs/usage.md) for the full command reference.
+
+## Documentation
+
+| Topic | Link |
+| --- | --- |
+| Setup | [docs/setup.md](docs/setup.md) |
+| Usage | [docs/usage.md](docs/usage.md) |
+| Testing | [docs/testing.md](docs/testing.md) |
+| Release & tagging | [docs/release.md](docs/release.md) |
+| Architecture | [docs/architecture.md](docs/architecture.md) |
+
+## How it works
+
+kubectl-neat always removes:
+
 - `status` and other runtime information
 - scheduler-assigned `spec.nodeName`
 - Pod service-account token volumes (`default-token-*`) and the deprecated `spec.serviceAccount` field
 - system-added tolerations (`DefaultTolerationSeconds` and node-condition tolerations)
 - RuntimeClass-computed pod overhead (`spec.overhead`)
-- `creationTimestamp` in pod templates of workload resources (`spec.template.metadata`)
+- `creationTimestamp` in workload pod templates (`spec.template.metadata`)
 - the `kubectl.kubernetes.io/last-applied-configuration` annotation
 - empty arrays and objects
 
-On top of that, kubectl-neat primarily looks for two types of things: default values inserted by Kubernetes' object model, and common mutating controllers.
+On top of that, it removes default values inserted by Kubernetes' object model and handles
+common mutating controllers. The full design is described in
+[docs/architecture.md](docs/architecture.md).
 
-## Kubernetes object model defaults
+## Contributing
 
-For de-defaulting Kubernetes' object model, we invoke the same code that Kubernetes would have, and see what default values were assigned. If these observed values look like the ones we have in the incoming spec, we conclude they are default. If they weren't, and the user manually set a field to it's default value, it's not a bad thing to remove it anyway.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Default removal currently covers the `v1` (core), `apps/v1`, and `batch/v1` built-in API groups. Resources from other groups (e.g. CRDs) pass through unchanged.
+## Security
 
-## Common mutating controllers
+See [SECURITY.md](SECURITY.md).
 
-Here are the [recommended](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#what-does-each-admission-controller-do) admission controllers, and their relation to kubectl-neat:
+## License
 
-controller | description | neat
----|---|---
-NamespaceLifecycle | rejects operations on resources in namespaces being deleted | ignore
-LimitRanger | set default values for resource requests and limits | ignore
-ServiceAccount | set default service account and assign token | Remove `default-token-*` volumes. Remove deprecated `spec.serviceAccount`
-TaintNodesByCondition | automatically taint a node based on node conditions | Remove node-condition tolerations
-Priority | validate priority class and add it's value | ignore
-DefaultTolerationSeconds | configure pods to temporarily tolarate notready and unreachable taints | Remove default `not-ready`/`unreachable` tolerations
-DefaultStorageClass | validate and set default storage class for new pvc | ignore
-StorageObjectInUseProtection | prevent deletion of pvc/pv in use by adding a finalizer | ignore
-PersistentVolumeClaimResize | enforce pvc resizing only for enabled storage classes | ignore
-MutatingAdmissionWebhook | implement the mutating webhook feature | ignore
-ValidatingAdmissionWebhook | implement the validating webhook feature | ignore
-RuntimeClass | add pod overhead according to runtime class | Remove `spec.overhead`
-ResourceQuota | implement the resource qouta feature | ignore
-Kubernetes Scheduler | assign pods to nodes | Remove `spec.nodeName`
+[Apache-2.0](LICENSE)
