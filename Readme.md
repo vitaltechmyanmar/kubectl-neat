@@ -10,6 +10,10 @@ Here is a result of a `kubectl get pod -o yaml` for a simple Pod. The lines mark
 
 ![demo](./demo.png)
 
+## Test Results
+
+![test results](./images/test-results.png)
+
 ## Why
 
 When you create a Kubernetes resource, let's say a Pod, Kubernetes adds a whole bunch of internal system information to the yaml or json that you originally authored. This includes:
