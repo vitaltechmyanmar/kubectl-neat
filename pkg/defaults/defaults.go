@@ -3,14 +3,16 @@ package defaults
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 
 	"github.com/jeremywohl/flatten"
-	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
+	appsapi "k8s.io/kubernetes/pkg/apis/apps/v1"
+	batchapi "k8s.io/kubernetes/pkg/apis/batch/v1"
 	apisv1 "k8s.io/kubernetes/pkg/apis/core/v1"
 )
 
@@ -39,18 +41,17 @@ func NeatDefaults(in string) (string, error) {
 	for k, v := range pathsToDelete {
 		isDefault, err := isDefault(k, v, in)
 		if err != nil {
-			log.Error(fmt.Errorf("error determining default for '%s' : %v", k, err))
+			slog.Error("error determining default", "path", k, "error", err)
 			continue
 		}
 		if !isDefault {
-			// don't want to delete from 'in' yet because that would affect the following isDefault tests
 			delete(pathsToDelete, k)
 		}
 	}
 	for k := range pathsToDelete {
 		in, err = sjson.Delete(in, k)
 		if err != nil {
-			log.Error(fmt.Errorf("error deleting default '%s' : %v", k, err))
+			slog.Error("error deleting default", "path", k, "error", err)
 			continue
 		}
 	}
@@ -77,6 +78,8 @@ var decoder runtime.Decoder
 func init() {
 	myscheme = runtime.NewScheme()
 	apisv1.AddToScheme(myscheme)
+	appsapi.AddToScheme(myscheme)
+	batchapi.AddToScheme(myscheme)
 	decoder = scheme.Codecs.UniversalDeserializer()
 }
 

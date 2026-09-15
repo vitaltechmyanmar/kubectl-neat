@@ -18,13 +18,13 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"os/exec"
 	"unicode"
 
-	"github.com/ghodss/yaml"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/yaml"
 )
 
 var outputFormat *string
@@ -59,12 +59,12 @@ kubectl neat -f ./my-pod.json --output yaml`,
 		var err error
 		if *inputFile == "-" {
 			stdin := cmd.InOrStdin()
-			in, err = ioutil.ReadAll(stdin)
+			in, err = io.ReadAll(stdin)
 		} else {
-			in, err = ioutil.ReadFile(*inputFile)
-			if err != nil {
-				return err
-			}
+			in, err = os.ReadFile(*inputFile)
+		}
+		if err != nil {
+			return err
 		}
 		outFormat := *outputFormat
 		if !cmd.Flag("output").Changed {
@@ -107,15 +107,13 @@ kubectl neat get -- svc -n default myservice --output json`,
 		if err != nil {
 			return fmt.Errorf("Error invoking kubectl as %v %v", kubectlCmd.Args, err)
 		}
-		//handle the case of 0--J->J--J
 		outFormat := *outputFormat
-		kubeout := "yaml"
 		for _, arg := range args {
 			if arg == "json" || arg == "ojson" {
 				outFormat = "json"
 			}
 		}
-		if !cmd.Flag("output").Changed && kubeout == "json" {
+		if !cmd.Flag("output").Changed {
 			outFormat = "json"
 		}
 		out, err = NeatYAMLOrJSON(kres, outFormat)

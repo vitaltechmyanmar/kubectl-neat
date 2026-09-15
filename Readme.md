@@ -1,7 +1,6 @@
-# This project is unmaintained
-I've created it as a toy project, but it slowly grew to a substential user base. Unfortunately I don't have the time or motivation to maintain it anymore. I don't want to disappoint people who open issues and PRs and expect meaningful response, so I herby declare this project "feature complete", and therefore concluded. If you have other ambitions for it, feel free to fork it and develop it in your own direction! Thanks, [Itay](https://x.com/itaysk).
-
 # kubectl-neat
+
+> **Maintained fork** of [itaysk/kubectl-neat](https://github.com/itaysk/kubectl-neat).
 
 Remove clutter from Kubernetes manifests to make them more readable.
 
@@ -73,6 +72,8 @@ Besides general tidying for status, metadata, and empty fields, kubectl-neat pri
 ## Kubernetes object model defaults
 
 For de-defaulting Kubernetes' object model, we invoke the same code that Kubernetes would have, and see what default values were assigned. If these observed values look like the ones we have in the incoming spec, we conclude they are default. If they weren't, and the user manually set a field to it's default value, it's not a bad thing to remove it anyway.
+
+Default removal currently covers the `v1` (core), `apps/v1`, and `batch/v1` built-in API groups. Resources from other groups (e.g. CRDs) pass through unchanged.
 
 ## Common mutating controllers
 

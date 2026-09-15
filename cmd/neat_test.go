@@ -16,7 +16,7 @@ limitations under the License.
 package cmd
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -272,6 +272,109 @@ func TestNeatServiceAccount(t *testing.T) {
 	}
 }
 
+func TestNeatWorkloadTemplate(t *testing.T) {
+	cases := []struct {
+		title  string
+		data   string
+		expect string
+	}{
+		{
+			title: "deployment with null creation timestamp",
+			data: `{
+				"apiVersion": "apps/v1",
+				"kind": "Deployment",
+				"metadata": {
+					"name": "myapp",
+					"namespace": "default"
+				},
+				"spec": {
+					"template": {
+						"metadata": {
+							"creationTimestamp": null,
+							"labels": {
+								"app": "myapp"
+							}
+						},
+						"spec": {
+							"containers": [
+								{
+									"image": "nginx",
+									"name": "myapp"
+								}
+							]
+						}
+					}
+				}
+			}`,
+			expect: `{
+				"apiVersion": "apps/v1",
+				"kind": "Deployment",
+				"metadata": {
+					"name": "myapp",
+					"namespace": "default"
+				},
+				"spec": {
+					"template": {
+						"metadata": {
+							"labels": {
+								"app": "myapp"
+							}
+						},
+						"spec": {
+							"containers": [
+								{
+									"image": "nginx",
+									"name": "myapp"
+								}
+							]
+						}
+					}
+				}
+			}`,
+		},
+		{
+			title: "no template section",
+			data: `{
+				"apiVersion": "v1",
+				"kind": "ConfigMap",
+				"metadata": {
+					"name": "mycm",
+					"namespace": "default"
+				},
+				"data": {
+					"key": "value"
+				}
+			}`,
+			expect: `{
+				"apiVersion": "v1",
+				"kind": "ConfigMap",
+				"metadata": {
+					"name": "mycm",
+					"namespace": "default"
+				},
+				"data": {
+					"key": "value"
+				}
+			}`,
+		},
+	}
+	for _, c := range cases {
+		resJSON, err := neatWorkloadTemplate(c.data)
+		if err != nil {
+			t.Errorf("error in neatWorkloadTemplate for case '%s': %v", c.title, err)
+			continue
+		}
+		equal, err := testutil.JSONEqual(resJSON, c.expect)
+		if err != nil {
+			t.Errorf("error in JSONEqual for case '%s': %v", c.title, err)
+			continue
+		}
+		if !equal {
+			t.Errorf("test case '%s' failed. want: '%s' have: '%s'", c.title, c.expect, resJSON)
+		}
+	}
+}
+
 func TestNeatEmpty(t *testing.T) {
 	cases := []struct {
 		title  string
@@ -294,8 +397,8 @@ func TestNeatEmpty(t *testing.T) {
 			expect: `{ "foo": [ "bar" ] }`,
 		},
 		{
-			title:  "empty array object",
-			data:   `{ "foo": "bar", "baz": { [] } }`,
+			title:  "empty object in array",
+			data:   `{ "foo": "bar", "baz": [{}] }`,
 			expect: `{ "foo": "bar"}`,
 		},
 		{
@@ -324,7 +427,7 @@ func TestNeatEmpty(t *testing.T) {
 
 func TestNeat(t *testing.T) {
 	testsDir := "../test/fixtures"
-	testFiles, err := ioutil.ReadDir(testsDir)
+	testFiles, err := os.ReadDir(testsDir)
 	if err != nil {
 		t.Fatalf("can't list tests in: %s", testsDir)
 	}
@@ -333,12 +436,12 @@ func TestNeat(t *testing.T) {
 		fParts := strings.Split(fName, "-")
 		if fParts[1] == "raw.json" {
 			fFullName := filepath.Join(testsDir, f.Name())
-			inBytes, err := ioutil.ReadFile(fFullName)
+			inBytes, err := os.ReadFile(fFullName)
 			if err != nil {
 				t.Errorf("can't read file: %s", fFullName)
 			}
 			expFullName := filepath.Join(testsDir, fParts[0]+"-neat.json")
-			expBytes, err := ioutil.ReadFile(expFullName)
+			expBytes, err := os.ReadFile(expFullName)
 			if err != nil {
 				t.Errorf("can't read file: %s", expFullName)
 			}

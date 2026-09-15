@@ -76,6 +76,11 @@ func Neat(in string) (string, error) {
 		if err != nil {
 			return draft, fmt.Errorf("error in neatServiceAccount : %v", err)
 		}
+	} else {
+		draft, err = neatWorkloadTemplate(draft)
+		if err != nil {
+			return draft, fmt.Errorf("error in neatWorkloadTemplate : %v", err)
+		}
 	}
 
 	// general neating
@@ -112,6 +117,12 @@ func neatMetadata(in string) (string, error) {
 
 func neatStatus(in string) (string, error) {
 	return sjson.Delete(in, "status")
+}
+
+// neatWorkloadTemplate removes system-generated fields from the embedded pod
+// template of workload resources (Deployment, StatefulSet, DaemonSet, etc.).
+func neatWorkloadTemplate(in string) (string, error) {
+	return sjson.Delete(in, "spec.template.metadata.creationTimestamp")
 }
 
 func neatScheduler(in string) (string, error) {
