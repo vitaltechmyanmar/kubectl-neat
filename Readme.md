@@ -14,6 +14,14 @@ Here is a result of a `kubectl get pod -o yaml` for a simple Pod. The lines mark
 
 ![test results](./images/test-results.png)
 
+## Documentation
+
+- [Setup](./docs/setup.md) — requirements and installation
+- [Usage](./docs/usage.md) — full command reference and examples
+- [Testing](./docs/testing.md) — how to run the test suites
+- [Release](./docs/release.md) — tagging and publishing releases
+- [Architecture](./docs/architecture.md) — how kubectl-neat works
+
 ## Why
 
 When you create a Kubernetes resource, let's say a Pod, Kubernetes adds a whole bunch of internal system information to the yaml or json that you originally authored. This includes:
@@ -36,6 +44,8 @@ or just download the binary if you prefer.
 
 When used as a kubectl plugin the command is `kubectl neat`, and when used as a standalone executable it's `kubectl-neat`.
 
+Verify the installation with `kubectl neat version`.
+
 ## Usage
 
 There are two modes of operation that specify where to get the input document from: a local file or from  Kubernetes.
@@ -44,7 +54,7 @@ There are two modes of operation that specify where to get the input document fr
 
 This is the default mode if you run just `kubectl neat`. This command accepts an optional flag `-f/--file` which specifies the file to neat. It can be a path to a local file, or `-` to read the file from stdin. If omitted, it will default to `-`. The file must be a yaml or json file and a valid Kubernetes resource.
 
-There's another optional optional flag, `-o/--output` which specifies the format for the output. If omitted it will default to the same format of the input (auto-detected).
+There's another optional flag, `-o/--output`, which specifies the format for the output (`yaml` or `json`). If omitted it will default to the same format of the input (auto-detected).
 
 Examples:
 ```bash
@@ -61,7 +71,7 @@ kubectl neat -f ./my-pod.json --output yaml
 
 ### Kubernetes - kubectl get wrapper
 
-This mode is invoked by calling the `get` subcommand, i.e `kubectl neat get ...`. It is a convenience to run `kubectl get` and then `kubectl neat` the output in a single command. It accepts any argument that `kubectl get` accepts and passes those arguments as is to `kubectl get`. Since it executes `kubectl`, it need to be able to find it in the path.
+This mode is invoked by calling the `get` subcommand, i.e `kubectl neat get ...`. It is a convenience to run `kubectl get` and then neat the output in a single command. It accepts any argument that `kubectl get` accepts and passes those arguments as is to `kubectl get` (internally it always requests JSON from `kubectl get` and converts back as needed). Since it executes `kubectl`, it needs `kubectl` to be available in the PATH. Unless you specify `-o/--output`, the output defaults to JSON.
 
 Examples:
 ```bash
@@ -69,9 +79,25 @@ kubectl neat get -- pod mypod -oyaml
 kubectl neat get -- svc -n default myservice --output json
 ```
 
+### Version
+
+```bash
+kubectl neat version
+```
+
+Prints the installed `kubectl-neat` version.
+
 # How it works
 
-Besides general tidying for status, metadata, and empty fields, kubectl-neat primarily looks for two types of things: default values inserted by Kubernetes' object model, and common mutating controllers.
+Besides general tidying, kubectl-neat always removes:
+- `status` and other runtime information
+- scheduler-assigned `spec.nodeName`
+- Pod service-account token volumes (`default-token-*`) and the deprecated `spec.serviceAccount` field
+- `creationTimestamp` in pod templates of workload resources (`spec.template.metadata`)
+- the `kubectl.kubernetes.io/last-applied-configuration` annotation
+- empty arrays and objects
+
+On top of that, kubectl-neat primarily looks for two types of things: default values inserted by Kubernetes' object model, and common mutating controllers.
 
 ## Kubernetes object model defaults
 
