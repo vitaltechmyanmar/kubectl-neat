@@ -1,0 +1,44 @@
+apiVersion: krew.googlecontainertools.github.com/v1alpha2
+kind: Plugin
+metadata:
+  name: neat
+spec:
+  version: "v3.0.1"
+  shortDescription: Remove clutter from Kubernetes manifests
+  homepage: https://github.com/vitaltechmyanmar/kubectl-neat
+  description: |
+    If you try to `kubectl get` resources you have just created,
+    they be unreadably verbose. `kubectl-neat` cleans that up by
+    removing default values, runtime information, and other internal fields.
+    Examples:
+    `$ kubectl get pod mypod -o yaml | kubectl neat`
+    `$ kubectl neat get -- pod mypod -o yaml`
+  platforms:
+    - selector:
+        matchLabels:
+          os: darwin
+          arch: amd64
+      uri: https://github.com/vitaltechmyanmar/kubectl-neat/releases/download/v3.0.1/kubectl-neat_darwin_amd64.tar.gz
+      sha256: 0af851b870361f31611c2f2f9203d5def1a0d3efb5f5e583e6128697bc3d631b
+      bin: "./kubectl-neat"
+    - selector:
+        matchLabels:
+          os: darwin
+          arch: arm64
+      uri: https://github.com/vitaltechmyanmar/kubectl-neat/releases/download/v3.0.1/kubectl-neat_darwin_arm64.tar.gz
+      sha256: 2510f8c09b4607cc1e178d10051905c3cb96362986645daca65f3d9577517fda
+      bin: "./kubectl-neat"
+    - selector:
+        matchLabels:
+          os: linux
+          arch: amd64
+      uri: https://github.com/vitaltechmyanmar/kubectl-neat/releases/download/v3.0.1/kubectl-neat_linux_amd64.tar.gz
+      sha256: 291d8d01b8bdd8919126ce3a1ba6d15e7faff68c44d26d94f224d01f1bcc7ce2
+      bin: "./kubectl-neat"
+    - selector:
+        matchLabels:
+          os: linux
+          arch: arm64
+      uri: https://github.com/vitaltechmyanmar/kubectl-neat/releases/download/v3.0.1/kubectl-neat_linux_arm64.tar.gz
+      sha256: 3abe95e507897e6d13a4c76a7ceee75504abdbee6b5402a506978580d4ccf1f9
+      bin: "./kubectl-neat"
