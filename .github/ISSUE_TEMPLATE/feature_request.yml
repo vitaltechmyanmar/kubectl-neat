@@ -1,0 +1,61 @@
+name: Feature Request
+description: Propose a new capability or command for kubectl-neat
+title: "feat: <short description>"
+labels: ["feature", "triage-needed"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a new feature for **kubectl-neat**!
+        Please ensure you have reviewed existing issues and discussions before opening a new request.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Motivation
+      description: What problem are you trying to solve? Why is this feature needed?
+      placeholder: "e.g., When exporting Kubernetes resources with new custom controllers or CRDs, extra runtime fields clutter the manifest..."
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution & User Experience
+      description: How should this feature work from the user's perspective? Include CLI flags, commands, or pipeline changes.
+      placeholder: "e.g., Add a flag `--strip-cr-annotations` or extend neat defaulting to handle..."
+    validations:
+      required: true
+  - type: textarea
+    id: affected-resources
+    attributes:
+      label: Kubernetes Resources & API Versions Impacted
+      description: List Kubernetes kinds (e.g. Pod, Deployment, CRD) or API versions affected.
+      placeholder: "e.g. apps/v1 Deployment, batch/v1 CronJob, custom CRDs"
+    validations:
+      required: false
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What other approaches or workarounds have you considered?
+    validations:
+      required: false
+  - type: dropdown
+    id: breaking-change
+    attributes:
+      label: Does this introduce a breaking change?
+      description: Will this change alter current default CLI output or behavior for existing users?
+      options:
+        - "No (Backward compatible)"
+        - "Yes (Breaking change - requires major version bump)"
+        - "Unsure / Needs discussion"
+    validations:
+      required: true
+  - type: checkboxes
+    id: checklists
+    attributes:
+      label: Readiness Checklist
+      options:
+        - label: I have searched for existing feature requests and issues.
+          required: true
+        - label: I am willing to contribute an RFC or code implementation for this feature.
+          required: false

@@ -1,0 +1,51 @@
+name: Enhancement Proposal
+description: Propose an improvement or refinement to an existing feature in kubectl-neat
+title: "enhance: <short description>"
+labels: ["enhancement", "triage-needed"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to suggest improvements to existing kubectl-neat capabilities (e.g. performance, toleration filtering, output formatting).
+  - type: textarea
+    id: current-behavior
+    attributes:
+      label: Current Behavior
+      description: Describe how kubectl-neat currently behaves.
+      placeholder: "e.g., kubectl neat currently leaves system-injected annotation X or toleration Y in the manifest..."
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-enhancement
+    attributes:
+      label: Proposed Enhancement
+      description: Describe the improved behavior you would like to see.
+      placeholder: "e.g., Automatically detect and prune annotation X during step 7 (metadata neat)..."
+    validations:
+      required: true
+  - type: textarea
+    id: fixtures
+    attributes:
+      label: Example YAML / JSON Fixtures
+      description: Provide sample input and expected neat output demonstrating this enhancement.
+      placeholder: |
+        ```yaml
+        # Raw Input:
+        ...
+        # Expected Neat Output:
+        ...
+        ```
+    validations:
+      required: true
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Area of Impact
+      options:
+        - "Core Neat Pipeline (cmd/neat.go)"
+        - "Kubernetes Schema Defaulting (pkg/defaults/)"
+        - "CLI & Flags (cmd/cmd.go)"
+        - "Packaging / Krew (krew-template.yaml, scripts)"
+        - "Documentation / Build / CI"
+    validations:
+      required: true

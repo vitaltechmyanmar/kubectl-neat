@@ -1,0 +1,51 @@
+name: Bug Report
+description: Report unexpected manifest output, crash, or CLI error in kubectl-neat
+title: "fix: <short description>"
+labels: ["bug", "triage-needed"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug! Please provide reproduction manifests and environment details.
+  - type: input
+    id: version
+    attributes:
+      label: kubectl-neat Version
+      description: Run `kubectl neat version` or `kubectl version --client`.
+      placeholder: "v3.0.1"
+    validations:
+      required: true
+  - type: input
+    id: k8s-version
+    attributes:
+      label: Kubernetes Server Version
+      placeholder: "v1.30.0"
+    validations:
+      required: false
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: What went wrong?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps & Manifest to Reproduce
+      description: Provide the command executed and the manifest YAML/JSON.
+      placeholder: |
+        ```bash
+        cat <<EOF | kubectl neat
+        <manifest here>
+        EOF
+        ```
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should kubectl-neat have output instead?
+    validations:
+      required: true

@@ -11,6 +11,8 @@ This index covers everything you need to work with **kubectl-neat**.
 | [Release](release.md) | Tagging a release and publishing it (GoReleaser + krew) |
 | [Testing](testing.md) | Running unit tests, e2e tests, and the CI setup |
 | [Architecture](architecture.md) | How kubectl-neat works internally |
+| [SDLC Lifecycle](sdlc-lifecycle.md) | Software development lifecycle for features, enhancements, and releases |
+| [RFC Proposal Template](proposals/template.md) | Template for proposing major features and architectural changes |
 
 ## Quick links
 
