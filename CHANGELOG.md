@@ -7,14 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.0] - 2026-11-26
+
 ### Added
 - Interactive diff mode (`--diff` / `-d`) displaying a colored unified diff showing fields removed by `kubectl-neat`.
 - Zero-dependency unified diff engine in `pkg/diff/`.
 - RFC 0001 proposal for interactive diff mode in `docs/proposals/0001-interactive-diff-mode.md`.
+- Formal 7-stage SDLC lifecycle guide in `docs/sdlc-lifecycle.md` and RFC proposal template.
+- GitHub Issue forms for feature requests, enhancement proposals, and bug reports, plus a structured PR template.
 
 ### Changed
 - Refactored `Readme.md` into a concise landing page; moved the deep design reference to
   `docs/architecture.md`.
+- Replaced static test results screenshot in `Readme.md` with formatted console output.
 - Corrected the krew install instructions in `docs/setup.md` (the official index `neat`
   installs the upstream project; document installing this fork from a local manifest).
 
@@ -43,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GoReleaser-based release workflow and krew packaging.
 - Expanded unit and e2e test coverage.
 
-[Unreleased]: https://github.com/vitaltechmyanmar/kubectl-neat/compare/v3.0.1...HEAD
+[Unreleased]: https://github.com/vitaltechmyanmar/kubectl-neat/compare/v3.1.0...HEAD
+[3.1.0]: https://github.com/vitaltechmyanmar/kubectl-neat/compare/v3.0.1...v3.1.0
 [3.0.1]: https://github.com/vitaltechmyanmar/kubectl-neat/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/vitaltechmyanmar/kubectl-neat/compare/v2.0.4...v3.0.0
