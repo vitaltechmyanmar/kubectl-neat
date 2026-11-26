@@ -70,6 +70,7 @@ See [docs/testing.md](docs/testing.md) for details on unit, Bats E2E, and integr
   Kubernetes' own object-model defaulting
 - Cleans up admission-controller leftovers: service-account token volumes, system tolerations,
   and RuntimeClass-computed pod overhead
+- Interactive diff mode (`--diff` / `-d`) displaying a colored unified diff of stripped fields
 - Handles YAML and JSON, single resources and Kubernetes `List`s
 
 ## Installation

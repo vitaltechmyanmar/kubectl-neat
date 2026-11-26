@@ -29,3 +29,10 @@ rootDir="./test/fixtures"
     [ $status -eq 0 ]
     [[ "$stdout" == "apiVersion"* ]]
 }
+
+@test "diff flag" {
+    run2 "$exe" --diff -f - <"$rootDir/pod1-raw.yaml"
+    [ $status -eq 0 ]
+    [[ "$stdout" == *"--- raw"* ]]
+    [[ "$stdout" == *"+++ neat"* ]]
+}

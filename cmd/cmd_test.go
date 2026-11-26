@@ -193,3 +193,22 @@ func TestGetCmd(t *testing.T) {
 		}
 	}
 }
+
+func TestRootCmdDiff(t *testing.T) {
+	resourceDataYAMLPath := "../test/fixtures/service1-raw.yaml"
+	cmdout := new(bytes.Buffer)
+	cmderr := new(bytes.Buffer)
+	rootCmd.SetOut(cmdout)
+	rootCmd.SetErr(cmderr)
+	rootCmd.SetArgs([]string{"--diff", "-f", resourceDataYAMLPath})
+	rootCmd.ParseFlags([]string{"--diff", "-f", resourceDataYAMLPath})
+	err := rootCmd.RunE(rootCmd, []string{})
+	if err != nil {
+		t.Fatalf("unexpected error running rootCmd with --diff: %v", err)
+	}
+	out := cmdout.String()
+	if !strings.Contains(out, "--- raw") || !strings.Contains(out, "+++ neat") {
+		t.Errorf("expected diff headers in output, got:\n%s", out)
+	}
+	showDiff = false
+}

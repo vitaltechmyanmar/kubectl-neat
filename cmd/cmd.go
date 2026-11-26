@@ -25,16 +25,20 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
+
+	"github.com/itaysk/kubectl-neat/pkg/diff"
 )
 
 var outputFormat *string
 var inputFile *string
 var printVersion bool
+var showDiff bool
 
 func init() {
 	outputFormat = rootCmd.PersistentFlags().StringP("output", "o", "yaml", "output format: yaml or json")
 	inputFile = rootCmd.Flags().StringP("file", "f", "-", "file path to neat, or - to read from stdin")
 	rootCmd.Flags().BoolVarP(&printVersion, "version", "v", false, "print kubectl-neat version and exit")
+	rootCmd.PersistentFlags().BoolVarP(&showDiff, "diff", "d", false, "display a unified diff showing fields removed by kubectl-neat")
 	rootCmd.SetOut(os.Stdout)
 	rootCmd.SetErr(os.Stderr)
 	rootCmd.MarkFlagFilename("file")
@@ -79,6 +83,14 @@ kubectl neat -f ./my-pod.json --output yaml`,
 		out, err = NeatYAMLOrJSON(in, outFormat)
 		if err != nil {
 			return err
+		}
+		if showDiff {
+			diffOut, err := renderDiff(in, out, outFormat)
+			if err != nil {
+				return err
+			}
+			cmd.Print(diffOut)
+			return nil
 		}
 		cmd.Print(string(out))
 		return nil
@@ -125,6 +137,14 @@ kubectl neat get -- svc -n default myservice --output json`,
 		out, err = NeatYAMLOrJSON(kres, outFormat)
 		if err != nil {
 			return err
+		}
+		if showDiff {
+			diffOut, err := renderDiff(kres, out, outFormat)
+			if err != nil {
+				return err
+			}
+			cmd.Print(diffOut)
+			return nil
 		}
 		cmd.Println(string(out))
 		return nil
@@ -177,4 +197,32 @@ func NeatYAMLOrJSON(in []byte, outputFormat string) (out []byte, err error) {
 		out = []byte(outjson)
 	}
 	return
+}
+
+func renderDiff(in []byte, out []byte, outFormat string) (string, error) {
+	var inNormalized string
+	itsYaml := !isJSON(in)
+	if itsYaml && (outFormat == "yaml" || outFormat == "same") {
+		injsonbytes, err := yaml.YAMLToJSON(in)
+		if err == nil {
+			normYAML, err := yaml.JSONToYAML(injsonbytes)
+			if err == nil {
+				inNormalized = string(normYAML)
+			}
+		}
+	} else if !itsYaml && (outFormat == "json" || outFormat == "same") {
+		inNormalized = string(in)
+	}
+	if inNormalized == "" {
+		inNormalized = string(in)
+	}
+	opts := diff.Options{
+		Color:   diff.ShouldColor(),
+		Context: 3,
+	}
+	d := diff.Unified("raw", "neat", inNormalized, string(out), opts)
+	if d == "" {
+		return "manifest is already neat (no differences)\n", nil
+	}
+	return d, nil
 }

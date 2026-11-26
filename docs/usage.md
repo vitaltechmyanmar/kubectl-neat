@@ -19,6 +19,7 @@ kubectl-neat version        Print the installed version
 | --- | --- | --- |
 | `-f`, `--file <path>` | `-` (stdin) | Path to the YAML/JSON file to neat. Use `-` for stdin. |
 | `-o`, `--output <fmt>` | auto | Output format: `yaml` or `json`. Auto-detected from the input if omitted. |
+| `-d`, `--diff` | `false` | Display a colored unified diff showing fields removed by kubectl-neat. |
 | `-v`, `--version` | `false` | Print the `kubectl-neat` version and exit. |
 
 Flags may appear around the `get` subcommand. See [Output format](#output-format) below.
@@ -40,6 +41,10 @@ kubectl neat -f ./my-pod.yaml
 
 # pipe a kubectl result
 kubectl get pod mypod -o yaml | kubectl neat
+
+# inspect removed fields using diff mode
+kubectl get pod mypod -o yaml | kubectl neat --diff
+kubectl neat -f ./my-pod.yaml --diff
 
 # change the output format
 kubectl get pod mypod -oyaml | kubectl neat -o json

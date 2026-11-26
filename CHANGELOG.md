@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Interactive diff mode (`--diff` / `-d`) displaying a colored unified diff showing fields removed by `kubectl-neat`.
+- Zero-dependency unified diff engine in `pkg/diff/`.
+- RFC 0001 proposal for interactive diff mode in `docs/proposals/0001-interactive-diff-mode.md`.
+
 ### Changed
 - Refactored `Readme.md` into a concise landing page; moved the deep design reference to
   `docs/architecture.md`.
