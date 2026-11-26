@@ -21,7 +21,47 @@ considered redundant and will be removed from the output by kubectl-neat.
 
 ## Test Results
 
-![test results](./images/test-results.png)
+Unit tests exercise the core neat pipeline, Kubernetes object-model defaulting, and CLI commands:
+
+```console
+$ make test-unit
+?   	github.com/itaysk/kubectl-neat	[no test files]
+=== RUN   TestRootCmd
+--- PASS: TestRootCmd (0.00s)
+=== RUN   TestGetCmd
+--- PASS: TestGetCmd (0.09s)
+=== RUN   TestNeatMetadata
+--- PASS: TestNeatMetadata (0.00s)
+=== RUN   TestNeatScheduler
+--- PASS: TestNeatScheduler (0.00s)
+=== RUN   TestNeatServiceAccount
+--- PASS: TestNeatServiceAccount (0.00s)
+=== RUN   TestNeatWorkloadTemplate
+--- PASS: TestNeatWorkloadTemplate (0.00s)
+=== RUN   TestNeatRuntimeClass
+--- PASS: TestNeatRuntimeClass (0.00s)
+=== RUN   TestNeatTolerations
+--- PASS: TestNeatTolerations (0.00s)
+=== RUN   TestVersionFlag
+--- PASS: TestVersionFlag (0.00s)
+=== RUN   TestNeatEmpty
+--- PASS: TestNeatEmpty (0.00s)
+=== RUN   TestNeat
+--- PASS: TestNeat (0.03s)
+PASS
+ok  	github.com/itaysk/kubectl-neat/cmd	0.16s
+=== RUN   TestComputeDefault
+--- PASS: TestComputeDefault (0.00s)
+=== RUN   TestIsDefault
+--- PASS: TestIsDefault (0.00s)
+=== RUN   TestNeatDefault
+--- PASS: TestNeatDefault (0.00s)
+PASS
+ok  	github.com/itaysk/kubectl-neat/pkg/defaults	0.02s
+?   	github.com/itaysk/kubectl-neat/pkg/testutil	[no test files]
+```
+
+See [docs/testing.md](docs/testing.md) for details on unit, Bats E2E, and integration test suites.
 
 ## Features
 
